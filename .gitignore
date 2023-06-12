@@ -131,3 +131,6 @@ dist
 
 # macOS directory attributes
 .DS_Store
+
+# Audacity artifacts
+.aup3-wal
