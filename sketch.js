@@ -1,6 +1,10 @@
 let soundFile;
+
+// Control buttons
 let playButton;
 let pauseButton;
+let stopButton;
+
 let volumeSlider;
 
 // This function is called before setup() and is used to load external files
@@ -30,6 +34,10 @@ function setup() {
   playButton.position(80, 20);
   playButton.mousePressed(playSound);
 
+  stopButton = createButton('stop');
+  stopButton.position(130, 20);
+  stopButton.mousePressed(stopSound);
+
   volumeSlider = createSlider(0, 2, 1, 0.01);
   volumeSlider.position(280, 150);
   volumeSlider.style('transform', 'rotate(270deg)');
@@ -46,4 +54,8 @@ function playSound() {
 
 function pauseSound() {
   soundFile.pause();
+}
+
+function stopSound() {
+  soundFile.stop();
 }
