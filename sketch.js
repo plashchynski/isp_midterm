@@ -4,6 +4,12 @@ let soundFile;
 let playButton;
 let pauseButton;
 let stopButton;
+let skipToStartButton;
+let skipToEndButton;
+let loopButton;
+let recordButton;
+
+let mic;
 
 let volumeSlider;
 
@@ -23,7 +29,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(500, 400);
   background(180);
 
   pauseButton = createButton('pause');
@@ -38,9 +44,27 @@ function setup() {
   stopButton.position(130, 20);
   stopButton.mousePressed(stopSound);
 
+  skipToStartButton = createButton('skip to start');
+  skipToStartButton.position(180, 20);
+  skipToStartButton.mousePressed(skipToStart);
+
+  skipToEndButton = createButton('skip to end');
+  skipToEndButton.position(280, 20);
+  skipToEndButton.mousePressed(skipToEnd);
+
+  loopButton = createButton('loop');
+  loopButton.position(370, 20);
+  loopButton.mousePressed(setLoop);
+
+  recordButton = createButton('record');
+  recordButton.position(420, 20);
+  recordButton.mousePressed(startRecording);
+
   volumeSlider = createSlider(0, 2, 1, 0.01);
   volumeSlider.position(280, 150);
   volumeSlider.style('transform', 'rotate(270deg)');
+
+  mic = new p5.AudioIn();
 }
 
 function draw() {
@@ -58,4 +82,23 @@ function pauseSound() {
 
 function stopSound() {
   soundFile.stop();
+}
+
+function skipToStart() {
+  soundFile.jump(0);
+}
+
+function skipToEnd() {
+  soundFile.jump(soundFile.duration());
+}
+
+function setLoop() {
+  soundFile.setLoop(true);
+}
+
+function startRecording() {
+  if (!soundFile.isPlaying()) {
+    soundFile.stop();
+  }
+  mic.start();
 }
