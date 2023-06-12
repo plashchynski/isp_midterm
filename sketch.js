@@ -1,5 +1,6 @@
 let soundFile;
 let playButton;
+let volumeSlider;
 
 // This function is called before setup() and is used to load external files
 function preload() {
@@ -17,16 +18,21 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(400, 200);
+  createCanvas(400, 400);
   background(180);
 
   playButton = createButton('play');
   playButton.position(20, 20);
   playButton.mousePressed(playSound);
+
+  volumeSlider = createSlider(0, 2, 1, 0.01);
+  volumeSlider.position(280, 150);
+  volumeSlider.style('transform', 'rotate(270deg)');
 }
 
 function draw() {
-  // put drawing code here
+  text('master\nvolume', 320, 60);
+  soundFile.setVolume(volumeSlider.value());
 }
 
 function playSound() {
