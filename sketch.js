@@ -1,5 +1,6 @@
 let soundFile;
 let playButton;
+let pauseButton;
 let volumeSlider;
 
 // This function is called before setup() and is used to load external files
@@ -21,8 +22,12 @@ function setup() {
   createCanvas(400, 400);
   background(180);
 
+  pauseButton = createButton('pause');
+  pauseButton.position(20, 20);
+  pauseButton.mousePressed(pauseSound);
+
   playButton = createButton('play');
-  playButton.position(20, 20);
+  playButton.position(80, 20);
   playButton.mousePressed(playSound);
 
   volumeSlider = createSlider(0, 2, 1, 0.01);
@@ -37,4 +42,8 @@ function draw() {
 
 function playSound() {
   soundFile.play();
+}
+
+function pauseSound() {
+  soundFile.pause();
 }
