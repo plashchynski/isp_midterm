@@ -11,6 +11,8 @@ let recordButton;
 
 let mic;
 
+let playbackControlPanel;
+
 let volumeSlider;
 
 // This function is called before setup() and is used to load external files
@@ -22,83 +24,34 @@ function preload() {
   // As not all browsers support the same audio formats, p5.js will try to load
   // the first format that is supported by the browser
   soundFormats('mp3', 'wav');
-  soundFile = loadSound('assets/sample');
+  player = loadSound('assets/sample');
 
   // A sound will play only if it's not already playing
-  soundFile.playMode('untilDone');
+  player.playMode('untilDone');
 }
 
 function setup() {
-  createCanvas(500, 400);
+  createCanvas(500, 500);
   background(180);
 
-  pauseButton = createButton('pause');
-  pauseButton.position(20, 20);
-  pauseButton.mousePressed(pauseSound);
-
-  playButton = createButton('play');
-  playButton.position(80, 20);
-  playButton.mousePressed(playSound);
-
-  stopButton = createButton('stop');
-  stopButton.position(130, 20);
-  stopButton.mousePressed(stopSound);
-
-  skipToStartButton = createButton('skip to start');
-  skipToStartButton.position(180, 20);
-  skipToStartButton.mousePressed(skipToStart);
-
-  skipToEndButton = createButton('skip to end');
-  skipToEndButton.position(280, 20);
-  skipToEndButton.mousePressed(skipToEnd);
-
-  loopButton = createButton('loop');
-  loopButton.position(370, 20);
-  loopButton.mousePressed(setLoop);
-
-  recordButton = createButton('record');
-  recordButton.position(420, 20);
-  recordButton.mousePressed(startRecording);
-
-  volumeSlider = createSlider(0, 2, 1, 0.01);
-  volumeSlider.position(280, 150);
-  volumeSlider.style('transform', 'rotate(270deg)');
-
+  // Create an AudioIn object to record audio from the microphone
   mic = new p5.AudioIn();
+
+  // Create the upper panel of buttons
+  playbackControlPanel = new PlaybackControlPanel(player, mic);
+  playbackControlPanel.setup();
+
+  // Create the volume slider
+  volumeSlider = createSlider(0, 2, 1, 0.01);
+  volumeSlider.position(380, 200);
+  volumeSlider.style('transform', 'rotate(270deg)');
 }
 
 function draw() {
-  text('master\nvolume', 320, 60);
-  soundFile.setVolume(volumeSlider.value());
-}
+  playbackControlPanel.draw();
 
-function playSound() {
-  soundFile.play();
-}
-
-function pauseSound() {
-  soundFile.pause();
-}
-
-function stopSound() {
-  soundFile.stop();
-}
-
-function skipToStart() {
-  soundFile.jump(0);
-}
-
-function skipToEnd() {
-  soundFile.jump(soundFile.duration());
-}
-
-function setLoop() {
-  soundFile.setLoop(true);
-}
-
-function startRecording() {
-  if (!soundFile.isPlaying()) {
-    soundFile.stop();
-  }
-  mic.start();
+  // Master volume
+  text('master\nvolume', volumeSlider.x + 40, volumeSlider.y - 100);
+  fill(255,0,0,0);
+  rect(volumeSlider.x+10, volumeSlider.y-140, 90, 250);
 }
