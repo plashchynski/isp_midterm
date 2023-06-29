@@ -1,5 +1,18 @@
+// the lower and upper limit of the frequency range for filters
+// defined by the p5.js API: https://p5js.org/reference/#/p5.Filter/set
+const minHz = 10;
+const maxHz = 22050;
+
+// the lower and upper limit of the resonance range for filters
+// defined by the p5.js API: https://p5js.org/reference/#/p5.Filter/set
+const minResonance = 0.001;
+const maxResonance = 1000;
+
 // p5.SoundFile instance to control the playback
 var player;
+
+// filters
+var lowpassFilter;
 
 // playback controls
 var pauseButton;
@@ -61,10 +74,19 @@ function setup() {
   background(180);
   
   gui_configuration();
+
+  player.disconnect();
+  lowpassFilter = new p5.LowPass();
+  lowpassFilter.process(player);
 }
 
 function draw() {
+  // make loop button green if the sound is looping
   loopButton.style('background-color', player.isLooping() ? 'green' : '');
+
+  lowpassFilter.set(lp_cutOffSlider.value(), lp_resonanceSlider.value());
+  lowpassFilter.drywet(lp_dryWetSlider.value());
+  lowpassFilter.amp(lp_outputSlider.value());
 }
 
 function gui_configuration() {
@@ -102,16 +124,23 @@ function gui_configuration() {
   textSize(14);
   text('low-pass filter', 10,80);
   textSize(10);
-  lp_cutOffSlider = createSlider(0, 1, 0.5, 0.01);
+
+  lp_cutOffSlider = createSlider(minHz, maxHz, maxHz/2, 10);
   lp_cutOffSlider.position(10,110);
   text('cutoff frequency', 10,105);
-  lp_resonanceSlider = createSlider(0, 1, 0.5, 0.01);
+
+  lp_resonanceSlider = createSlider(minResonance, maxResonance, 0, 10);
   lp_resonanceSlider.position(10,155);
   text('resonance', 10,150);
-  lp_dryWetSlider = createSlider(0, 1, 0.5, 0.01);
+
+  // dry/wet and output level from 0 to 1.0
+  // 1.0 means 100% wet
+  lp_dryWetSlider = createSlider(0, 1.0, 1.0, 0.01);
   lp_dryWetSlider.position(10,200);
   text('dry/wet', 10,195);
-  lp_outputSlider = createSlider(0, 1, 0.5, 0.01);
+
+  // output level from 0 to 1.0, 1.0 means 100% volume
+  lp_outputSlider = createSlider(0, 1.0, 1.0, 0.01);
   lp_outputSlider.position(10,245);
   text('output level', 10,240);
   
