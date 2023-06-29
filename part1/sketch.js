@@ -14,6 +14,7 @@ var player;
 // filters
 var lowpassFilter;
 var waveshaperDistortion;
+var dynamicCompressor;
 
 // playback controls
 var pauseButton;
@@ -84,10 +85,14 @@ function setup() {
   lowpassFilter.process(player);
 
   waveshaperDistortion = new p5.Distortion();
-  // waveshaperDistortion.disconnect();
+  waveshaperDistortion.disconnect();
   waveshaperDistortion.process(lowpassFilter);
 
-  waveshaperDistortion.connect();
+  dynamicCompressor = new p5.Compressor();
+  dynamicCompressor.disconnect();
+  dynamicCompressor.process(waveshaperDistortion);
+
+  dynamicCompressor.connect();
 }
 
 function draw() {
@@ -103,6 +108,17 @@ function draw() {
   waveshaperDistortion.set(wd_amountSlider.value(), wd_oversampleRadio.value());
   waveshaperDistortion.drywet(wd_dryWetSlider.value());
   waveshaperDistortion.amp(wd_outputSlider.value());
+
+  // configure dynamic compressor
+  attack = dc_attackSlider.value();
+  knee = dc_kneeSlider.value();
+  ratio = dc_ratioSlider.value();
+  threshold = dc_thresholdSlider.value();
+  release = dc_releaseSlider.value();
+
+  dynamicCompressor.set(attack, knee, ratio, threshold, release);
+  dynamicCompressor.drywet(dc_dryWetSlider.value());
+  dynamicCompressor.amp(dc_outputSlider.value());
 }
 
 function gui_configuration() {
@@ -164,27 +180,45 @@ function gui_configuration() {
   textSize(14);
   text('dynamic compressor', 210,80);
   textSize(10);
-  dc_attackSlider = createSlider(0, 1, 0.5, 0.01);
+
+  // Attack is the amount of time (in seconds) to reduce the gain by 10dB
+  // default = .003, range 0 - 1
+  dc_attackSlider = createSlider(0, 1, 0.003, 0.001);
   dc_attackSlider.position(210,110);
   text('attack', 210,105);
-  dc_kneeSlider = createSlider(0, 1, 0.5, 0.01);
-  dc_kneeSlider.position(210,155);
-  text('knee', 210,150);
-  dc_releaseSlider = createSlider(0, 1, 0.5, 0.01);
-  dc_releaseSlider.position(210,200);
-  text('release', 210,195);
-  dc_ratioSlider = createSlider(0, 1, 0.5, 0.01);
-  dc_ratioSlider.position(210,245);
-  text('ratio', 210,240);
-  dc_thresholdSlider = createSlider(0, 1, 0.5, 0.01);
+
+  // A decibel value representing the range above the threshold
+  // where the curve smoothly transitions to the "ratio" portion.
+  // default = 30, range 0 - 40
+  dc_kneeSlider = createSlider(0, 40, 30, 0.1);
+  dc_kneeSlider.position(210, 155);
+  text('knee', 210, 150);
+
+  // The amount of time (in seconds) to increase the gain by 10dB
+  // default = .25, range 0 - 1
+  dc_releaseSlider = createSlider(0, 1, 0.25, 0.01);
+  dc_releaseSlider.position(210, 200);
+  text('release', 210, 195);
+
+  // The amount of dB change in input for a 1 dB change in output
+  // default = 12, range 1 - 20
+  dc_ratioSlider = createSlider(1, 20, 12, 0.1);
+  dc_ratioSlider.position(210, 245);
+  text('ratio', 210, 240);
+
+  // The decibel value above which the compression will start taking effect
+  // default = -24, range -100 - 0
+  dc_thresholdSlider = createSlider(-100, 0, -24, 0.1);
   dc_thresholdSlider.position(360,110);
   text('threshold', 360,105);
-  dc_dryWetSlider = createSlider(0, 1, 0.5, 0.01);
-  dc_dryWetSlider.position(360,155);
-  text('dry/wet', 360,150);
-  dc_outputSlider = createSlider(0, 1, 0.5, 0.01);
-  dc_outputSlider.position(360,200);
-  text('output level', 360,195);
+
+  dc_dryWetSlider = createSlider(0, 1, 1, 0.01);
+  dc_dryWetSlider.position(360, 155);
+  text('dry/wet', 360, 150);
+
+  dc_outputSlider = createSlider(0, 1, 1, 0.01);
+  dc_outputSlider.position(360, 200);
+  text('output level', 360, 195);
   
   // master volume
   textSize(14);
