@@ -13,6 +13,7 @@ var player;
 
 // filters
 var lowpassFilter;
+var waveshaperDistortion;
 
 // playback controls
 var pauseButton;
@@ -75,18 +76,33 @@ function setup() {
   
   gui_configuration();
 
+
   player.disconnect();
+
   lowpassFilter = new p5.LowPass();
+  lowpassFilter.disconnect();
   lowpassFilter.process(player);
+
+  waveshaperDistortion = new p5.Distortion();
+  // waveshaperDistortion.disconnect();
+  waveshaperDistortion.process(lowpassFilter);
+
+  waveshaperDistortion.connect();
 }
 
 function draw() {
   // make loop button green if the sound is looping
   loopButton.style('background-color', player.isLooping() ? 'green' : '');
 
+  // configure low-pass filter
   lowpassFilter.set(lp_cutOffSlider.value(), lp_resonanceSlider.value());
   lowpassFilter.drywet(lp_dryWetSlider.value());
   lowpassFilter.amp(lp_outputSlider.value());
+
+  // configure waveshaper distortion
+  waveshaperDistortion.set(wd_amountSlider.value(), wd_oversampleRadio.value());
+  waveshaperDistortion.drywet(wd_dryWetSlider.value());
+  waveshaperDistortion.amp(wd_outputSlider.value());
 }
 
 function gui_configuration() {
@@ -201,18 +217,33 @@ function gui_configuration() {
   textSize(14);
   text('waveshaper distortion', 210,305);
   textSize(10);
+
   wd_amountSlider = createSlider(0, 1, 0.5, 0.01);
-  wd_amountSlider.position(210,335);
-  text('distortion amount', 210,330);
-  wd_oversampleSlider = createSlider(0, 1, 0.5, 0.01);
-  wd_oversampleSlider.position(210,380);
+  wd_amountSlider.position(210, 335);
+  text('distortion amount', 210, 330);
+
+  // oversample can be 'none', '2x' or '4x'
+  // according to the p5.js API: https://p5js.org/reference/#/p5.Distortion
+  push();
+  textAlign(CENTER);
+  wd_oversampleRadio = createRadio();
+  wd_oversampleRadio.option('none');
+  wd_oversampleRadio.option('2x');
+  wd_oversampleRadio.option('4x');
+  wd_oversampleRadio.selected('none');
+  wd_oversampleRadio.style('width', '200px');
+  pop();
+
+  wd_oversampleRadio.position(210,380);
   text('oversample', 210,375);
-  wd_dryWetSlider = createSlider(0, 1, 0.5, 0.01);
-  wd_dryWetSlider.position(210,425);
-  text('dry/wet', 210,420);
-  wd_outputSlider = createSlider(0, 1, 0.5, 0.01);
-  wd_outputSlider.position(210,470);
-  text('output level', 210,465);
+
+  wd_dryWetSlider = createSlider(0, 1, 0, 0.01);
+  wd_dryWetSlider.position(210, 425);
+  text('dry/wet', 210, 420);
+
+  wd_outputSlider = createSlider(0, 1, 1, 0.01);
+  wd_outputSlider.position(210, 470);
+  text('output level', 210, 465);
   
   // spectrums
   textSize(14);
