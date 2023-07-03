@@ -18,6 +18,10 @@ var dynamicCompressor;
 var reverbFilter;
 var masterVolumeFilter;
 
+// ffts
+var fftIn;
+var fftOut;
+
 // reverb filter reverse flag
 var reverbReverse = false;
 
@@ -87,6 +91,10 @@ function setup() {
 
   player.disconnect();
 
+  // analyze spectrum of the original sound
+  fftIn = new p5.FFT();
+  fftIn.setInput(player);
+
   lowpassFilter = new p5.LowPass();
   lowpassFilter.disconnect();
   lowpassFilter.process(player);
@@ -107,6 +115,10 @@ function setup() {
   masterVolumeFilter.disconnect();
   masterVolumeFilter.setInput(reverbFilter);
   masterVolumeFilter.connect();
+
+  // analyze spectrum after processing
+  fftOut = new p5.FFT();
+  fftOut.setInput(masterVolumeFilter);
 
   updateFiltersSettings();
 }
@@ -146,12 +158,6 @@ function updateFiltersSettings() {
 
   // configure master volume
   masterVolumeFilter.amp(mv_volumeSlider.value());
-}
-
-function draw() {
-  // make loop button green if the sound is looping
-  loopButton.style('background-color', playerLooping ? 'green' : '');
-  rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
 }
 
 function gui_configuration() {
@@ -349,4 +355,40 @@ function gui_configuration() {
   textSize(14);
   text('spectrum in', 560,200);
   text('spectrum out', 560,345);
+}
+
+// Display the spectrum
+function displaySpectrum(spectrum, x, y) {
+  push()
+
+  translate(x, y)
+  scale(0.25, 0.2)
+  noStroke()
+  fill(100)
+  rect(0, 0, width, height)
+  fill(240, 0, 0)
+
+  for (let i = 0; i < spectrum.length; i++) {
+      const x = map(i, 0, spectrum.length, 0, width)
+      const h = -height + map(spectrum[i], 0, 255, height, 0)
+      rect(x, height, width / spectrum.length, h)
+  }
+
+  pop()
+}
+
+// Display the spectrum of the original sound and the processed sound
+function updateSpectrograms() {
+  displaySpectrum(fftIn.analyze(), 560, 210);
+  displaySpectrum(fftOut.analyze(), 560, 355);
+}
+
+// This function is called once per frame by p5.js
+function draw() {
+  // make loop button green if the sound is looping
+  loopButton.style('background-color', playerLooping ? 'green' : '');
+  rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
+
+  // display the spectrograms
+  updateSpectrograms();
 }
