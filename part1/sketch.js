@@ -15,6 +15,8 @@ var player;
 var lowpassFilter;
 var waveshaperDistortion;
 var dynamicCompressor;
+var reverbFilter;
+var reverbReverse = false;
 
 // playback controls
 var pauseButton;
@@ -77,7 +79,6 @@ function setup() {
   
   gui_configuration();
 
-
   player.disconnect();
 
   lowpassFilter = new p5.LowPass();
@@ -92,13 +93,17 @@ function setup() {
   dynamicCompressor.disconnect();
   dynamicCompressor.process(waveshaperDistortion);
 
-  dynamicCompressor.connect();
+  reverbFilter = new p5.Reverb();
+  reverbFilter.disconnect();
+  reverbFilter.process(dynamicCompressor);
+
+  reverbFilter.connect();
+
+  updateFiltersSettings();
 }
 
-function draw() {
-  // make loop button green if the sound is looping
-  loopButton.style('background-color', player.isLooping() ? 'green' : '');
-
+function updateFiltersSettings() {
+  console.log("update filters settings")
   // configure low-pass filter
   lowpassFilter.set(lp_cutOffSlider.value(), lp_resonanceSlider.value());
   lowpassFilter.drywet(lp_dryWetSlider.value());
@@ -110,15 +115,29 @@ function draw() {
   waveshaperDistortion.amp(wd_outputSlider.value());
 
   // configure dynamic compressor
-  attack = dc_attackSlider.value();
-  knee = dc_kneeSlider.value();
-  ratio = dc_ratioSlider.value();
-  threshold = dc_thresholdSlider.value();
-  release = dc_releaseSlider.value();
+  const attack = dc_attackSlider.value();
+  const knee = dc_kneeSlider.value();
+  const ratio = dc_ratioSlider.value();
+  const threshold = dc_thresholdSlider.value();
+  const release = dc_releaseSlider.value();
 
   dynamicCompressor.set(attack, knee, ratio, threshold, release);
   dynamicCompressor.drywet(dc_dryWetSlider.value());
   dynamicCompressor.amp(dc_outputSlider.value());
+
+  // configure reberb filter
+  const duration = rv_durationSlider.value();
+  const decay = rv_decaySlider.value();
+
+  reverbFilter.set(duration, decay, reverbReverse);
+  reverbFilter.drywet(rv_dryWetSlider.value());
+  reverbFilter.amp(rv_outputSlider.value());
+}
+
+function draw() {
+  // make loop button green if the sound is looping
+  loopButton.style('background-color', player.isLooping() ? 'green' : '');
+  rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
 }
 
 function gui_configuration() {
@@ -159,21 +178,25 @@ function gui_configuration() {
 
   lp_cutOffSlider = createSlider(minHz, maxHz, maxHz/2, 10);
   lp_cutOffSlider.position(10,110);
+  lp_cutOffSlider.changed(updateFiltersSettings);
   text('cutoff frequency', 10,105);
 
   lp_resonanceSlider = createSlider(minResonance, maxResonance, 0, 10);
   lp_resonanceSlider.position(10,155);
+  lp_resonanceSlider.changed(updateFiltersSettings);
   text('resonance', 10,150);
 
   // dry/wet and output level from 0 to 1.0
   // 1.0 means 100% wet
   lp_dryWetSlider = createSlider(0, 1.0, 1.0, 0.01);
   lp_dryWetSlider.position(10,200);
+  lp_dryWetSlider.changed(updateFiltersSettings);
   text('dry/wet', 10,195);
 
   // output level from 0 to 1.0, 1.0 means 100% volume
   lp_outputSlider = createSlider(0, 1.0, 1.0, 0.01);
   lp_outputSlider.position(10,245);
+  lp_outputSlider.changed(updateFiltersSettings);
   text('output level', 10,240);
   
   // dynamic compressor
@@ -185,6 +208,7 @@ function gui_configuration() {
   // default = .003, range 0 - 1
   dc_attackSlider = createSlider(0, 1, 0.003, 0.001);
   dc_attackSlider.position(210,110);
+  dc_attackSlider.changed(updateFiltersSettings);
   text('attack', 210,105);
 
   // A decibel value representing the range above the threshold
@@ -192,32 +216,38 @@ function gui_configuration() {
   // default = 30, range 0 - 40
   dc_kneeSlider = createSlider(0, 40, 30, 0.1);
   dc_kneeSlider.position(210, 155);
+  dc_kneeSlider.changed(updateFiltersSettings);
   text('knee', 210, 150);
 
   // The amount of time (in seconds) to increase the gain by 10dB
   // default = .25, range 0 - 1
   dc_releaseSlider = createSlider(0, 1, 0.25, 0.01);
   dc_releaseSlider.position(210, 200);
+  dc_releaseSlider.changed(updateFiltersSettings);
   text('release', 210, 195);
 
   // The amount of dB change in input for a 1 dB change in output
   // default = 12, range 1 - 20
   dc_ratioSlider = createSlider(1, 20, 12, 0.1);
   dc_ratioSlider.position(210, 245);
+  dc_ratioSlider.changed(updateFiltersSettings);
   text('ratio', 210, 240);
 
   // The decibel value above which the compression will start taking effect
   // default = -24, range -100 - 0
   dc_thresholdSlider = createSlider(-100, 0, -24, 0.1);
   dc_thresholdSlider.position(360,110);
+  dc_thresholdSlider.changed(updateFiltersSettings);
   text('threshold', 360,105);
 
   dc_dryWetSlider = createSlider(0, 1, 1, 0.01);
   dc_dryWetSlider.position(360, 155);
+  dc_dryWetSlider.changed(updateFiltersSettings);
   text('dry/wet', 360, 150);
 
   dc_outputSlider = createSlider(0, 1, 1, 0.01);
   dc_outputSlider.position(360, 200);
+  dc_outputSlider.changed(updateFiltersSettings);
   text('output level', 360, 195);
   
   // master volume
@@ -226,26 +256,45 @@ function gui_configuration() {
   textSize(10);
   mv_volumeSlider = createSlider(0, 1, 0.5, 0.01);
   mv_volumeSlider.position(560,110);
+  mv_volumeSlider.changed(updateFiltersSettings);
   text('level', 560,105)
 
   // reverb
   textSize(14);
   text('reverb', 10,305);
   textSize(10);
-  rv_durationSlider = createSlider(0, 1, 0.5, 0.01);
-  rv_durationSlider.position(10,335);
-  text('duration', 10,330);
-  rv_decaySlider = createSlider(0, 1, 0.5, 0.01);
-  rv_decaySlider.position(10,380);
-  text('decay', 10,375);
-  rv_dryWetSlider = createSlider(0, 1, 0.5, 0.01);
-  rv_dryWetSlider.position(10,425);
-  text('dry/wet', 10,420);
-  rv_outputSlider = createSlider(0, 1, 0.5, 0.01);
-  rv_outputSlider.position(10,470);
-  text('output level', 10,465);
+
+  // Duration of the reverb, in seconds
+  // Min: 0, Max: 10. Defaults to 3
+  rv_durationSlider = createSlider(0, 10, 3, 0.01);
+  rv_durationSlider.position(10, 335);
+  rv_durationSlider.changed(updateFiltersSettings);
+  text('duration', 10, 330);
+
+  // Percentage of decay with each echo.
+  // Min: 0, Max: 100. Defaults to 2.
+  rv_decaySlider = createSlider(0, 100, 2, 0.01);
+  rv_decaySlider.position(10, 380);
+  rv_decaySlider.changed(updateFiltersSettings);
+  text('decay', 10, 375);
+
+  rv_dryWetSlider = createSlider(0, 1, 1, 0.01);
+  rv_dryWetSlider.position(10, 425);
+  rv_dryWetSlider.changed(updateFiltersSettings);
+  text('dry/wet', 10, 420);
+
+  rv_outputSlider = createSlider(0, 1, 1, 0.01);
+  rv_outputSlider.position(10, 470);
+  rv_outputSlider.changed(updateFiltersSettings);
+  text('output level', 10, 465);
+
   rv_reverseButton = createButton('reverb reverse');
   rv_reverseButton.position(10, 510);
+  rv_reverseButton.mousePressed(() => {
+    reverbReverse = !reverbReverse;
+    updateFiltersSettings();
+  });
+
   
   // waveshaper distortion
   textSize(14);
