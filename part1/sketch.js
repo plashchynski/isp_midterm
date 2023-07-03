@@ -16,6 +16,9 @@ var lowpassFilter;
 var waveshaperDistortion;
 var dynamicCompressor;
 var reverbFilter;
+var masterVolumeFilter;
+
+// reverb filter reverse flag
 var reverbReverse = false;
 
 // playback controls
@@ -97,11 +100,16 @@ function setup() {
   reverbFilter.disconnect();
   reverbFilter.process(dynamicCompressor);
 
-  reverbFilter.connect();
+  masterVolumeFilter = new p5.Gain();
+  masterVolumeFilter.disconnect();
+  masterVolumeFilter.setInput(reverbFilter);
+  masterVolumeFilter.connect();
 
   updateFiltersSettings();
 }
 
+// This function is called when the user changes any of the sliders
+// controls the filters settings
 function updateFiltersSettings() {
   console.log("update filters settings")
   // configure low-pass filter
@@ -132,6 +140,9 @@ function updateFiltersSettings() {
   reverbFilter.set(duration, decay, reverbReverse);
   reverbFilter.drywet(rv_dryWetSlider.value());
   reverbFilter.amp(rv_outputSlider.value());
+
+  // configure master volume
+  masterVolumeFilter.amp(mv_volumeSlider.value());
 }
 
 function draw() {
@@ -278,7 +289,7 @@ function gui_configuration() {
   rv_decaySlider.changed(updateFiltersSettings);
   text('decay', 10, 375);
 
-  rv_dryWetSlider = createSlider(0, 1, 1, 0.01);
+  rv_dryWetSlider = createSlider(0, 1, 0, 0.01);
   rv_dryWetSlider.position(10, 425);
   rv_dryWetSlider.changed(updateFiltersSettings);
   text('dry/wet', 10, 420);
