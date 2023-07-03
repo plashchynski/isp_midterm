@@ -21,6 +21,9 @@ var masterVolumeFilter;
 // reverb filter reverse flag
 var reverbReverse = false;
 
+// player looping flag
+var playerLooping = false;
+
 // playback controls
 var pauseButton;
 var playButton;
@@ -147,7 +150,7 @@ function updateFiltersSettings() {
 
 function draw() {
   // make loop button green if the sound is looping
-  loopButton.style('background-color', player.isLooping() ? 'green' : '');
+  loopButton.style('background-color', playerLooping ? 'green' : '');
   rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
 }
 
@@ -175,7 +178,10 @@ function gui_configuration() {
 
   loopButton = createButton('loop');
   loopButton.position(352, 20);
-  loopButton.mousePressed(() => { player.setLoop(!player.isLooping()); });
+  loopButton.mousePressed(() => {
+    playerLooping = !playerLooping;
+    player.setLoop(playerLooping);
+  });
 
   recordButton = createButton('record');
   recordButton.position(402, 20);  
