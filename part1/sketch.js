@@ -22,6 +22,15 @@ var masterVolumeFilter;
 var fftIn;
 var fftOut;
 
+// recorder to record the processed sound and save it as a file
+var recorder;
+
+// sound file to save the processed sound
+var outFile;
+
+// recording flag
+var recording = false;
+
 // reverb filter reverse flag
 var reverbReverse = false;
 
@@ -120,6 +129,14 @@ function setup() {
   fftOut = new p5.FFT();
   fftOut.setInput(masterVolumeFilter);
 
+  // configure recording
+  recorder = new p5.SoundRecorder();
+  recorder.setInput(masterVolumeFilter);
+
+  // sound file to save the processed sound
+  outFile = new p5.SoundFile();
+  outFile.disconnect();
+
   updateFiltersSettings();
 }
 
@@ -190,7 +207,24 @@ function gui_configuration() {
   });
 
   recordButton = createButton('record');
-  recordButton.position(402, 20);  
+  recordButton.position(402, 20);
+  recordButton.mousePressed(() => {
+    if (getAudioContext().state !== 'running') {
+      getAudioContext().resume();
+    }
+
+    if (!player.isPlaying())
+      return;
+
+    recording = !recording;
+    if (recording) {
+      recorder.record(outFile, 0, () => {
+        save(outFile, 'processed.wav');
+      });
+    } else {
+      recorder.stop();
+    }
+  });
   
   // Important: you may have to change the slider parameters (min, max, value and step)
   
@@ -388,6 +422,7 @@ function draw() {
   // make loop button green if the sound is looping
   loopButton.style('background-color', playerLooping ? 'green' : '');
   rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
+  recordButton.style('background-color', recording ? 'green' : '');
 
   // display the spectrograms
   updateSpectrograms();
