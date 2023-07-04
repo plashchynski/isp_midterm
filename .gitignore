@@ -134,3 +134,6 @@ dist
 
 # Audacity artifacts
 .aup3-wal
+
+# zip files are extracted to this folder
+*.zip
