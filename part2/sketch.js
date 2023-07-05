@@ -1,75 +1,96 @@
 var sound;
-var startAnalysisButton;
+
+// Settings
+const bufferSize = 512; // 44100/512 = 86Hz resolution
+var maxAmplitude = 256; // 256 = 0dB
+
+// Reported features
 var features;
-var featuresToAnalyze = ["energy", 
-"perceptualSharpness", "perceptualSpread", "rms", "spectralCentroid",
-"spectralFlatness", "spectralKurtosis", "spectralRolloff", "spectralSkewness",
-"spectralSlope", "spectralSpread", "zcr"];
-const fileName = 'assets/Ex2_sound1.wav';
 
 function preload() {
-  sound = loadSound(fileName);
+  sound = loadSound("assets/Kalte_Ohren_(_Remix_).mp3");
 }
 
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(1000, 600);
   background(255);
 
-  features = [];
-
   analyzer = Meyda.createMeydaAnalyzer({
-    "audioContext": getAudioContext(),
-    "source": sound,
-    "bufferSize": 512, // 44100/512 = 86Hz resolution
-    "featureExtractors": featuresToAnalyze,
-    "callback": f => {
-      features.push(f);
-    }
+    audioContext: getAudioContext(),
+    source: sound,
+    bufferSize: bufferSize, // 44100/512 = 86Hz resolution
+    featureExtractors: ["amplitudeSpectrum", "energy", "spectralCentroid", "loudness", "spectralSpread", "spectralKurtosis"],
+    callback:  processAudioFeatures
   });
 
-  startAnalysisButton = createButton('Analyze');
-  startAnalysisButton.position(10, 10);
-  startAnalysisButton.mousePressed(startAnalysis);
+  playStopButton = createButton('play');
+  playStopButton.position(10, 10);
+  playStopButton.mousePressed(playStop);
 }
 
-function startAnalysis() {
-  sound.play();
-  analyzer.start();
-  startAnalysisButton.remove();
-}
-
-function normalize(array) {
-  array = array.map(v => (v === undefined || isNaN(v)) ? 0 : v);
-  array = array.map(v => v === Infinity ? 1 : v);
-
-  const min = Math.min(...array);
-  const max = Math.max(...array);
-  const range = max - min;
-
-  return(array.map((v) => (v - min) / range));
+function playStop() {
+  if (sound.isPlaying()) {
+    sound.stop();
+    analyzer.stop();
+    playStopButton.html('play');
+  } else {
+    sound.play();
+    analyzer.start();
+    playStopButton.html('stop');
+  }
 }
 
 function draw() {
-  if (features.length == 0 ) {
-    return;
-  }
-
+  // Stop the analyzer when the sound has finished playing
   if (!sound.isPlaying()) {
     analyzer.stop();
   }
 
-  const results = {};
-  featuresToAnalyze.map(name => {
-    results[name] = math.std(normalize(features.map(f => f[name])))
+  background(255);
+
+  drawVisualisation();
+}
+
+// Meyda callback function
+function processAudioFeatures(f) {
+  features = f;
+}
+
+// Draw the visualisation
+function drawVisualisation() {
+  if (features === undefined)
+    return; // No features yet
+
+  features.amplitudeSpectrum.forEach(function (value, index) {
+    var x = map(index, 0, features.amplitudeSpectrum.length, 0, width);
+    var h = map(value, 0, maxAmplitude, 0, height);
+    stroke(0);
+    line(x, height, x, height-h);
   });
 
-  background(255);
-  fill(0);
+  const numberOfRects = features.loudness.specific.length;
+  const rectWidth = width/(numberOfRects+1);
+  const centroidRect = Math.ceil(numberOfRects*(features.spectralCentroid/bufferSize/2));
 
-  text('File: ' + fileName, 10, 20);
+  features.loudness.specific.forEach(function (level, index) {
+    push();
 
-  Object.keys(results).forEach(function(name, i) {
-    const y = i * 20 + 50;
-    text(name + ' normalized std: ' + results[name], 10, y);
+    translate(rectWidth + index * rectWidth, height/2);
+
+    rectMode(CENTER);
+    fill(map(level, 0, 2, 0, 255));
+    stroke(0);
+
+    // console.log(features.spectralKurtosis);
+
+    if (centroidRect === index) {
+      const weight = map(features.spectralKurtosis, -50, 200, 1, 30);
+      strokeWeight(weight);
+    }
+
+    const w = map(features.energy, 0, 100, 0, rectWidth);
+    const h = map(level, 0, 1.0, 0, rectWidth);
+    rect(0, 0, w, h);
+    pop();
   });
 }
