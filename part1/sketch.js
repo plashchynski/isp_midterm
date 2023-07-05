@@ -393,22 +393,22 @@ function gui_configuration() {
 
 // Display the spectrum
 function displaySpectrum(spectrum, x, y) {
-  push()
+  push();
 
-  translate(x, y)
-  scale(0.25, 0.2)
-  noStroke()
-  fill(100)
-  rect(0, 0, width, height)
-  fill(240, 0, 0)
+  translate(x, y);
+  scale(0.25, 0.2);
+  noStroke();
+  fill(100);
+  rect(0, 0, width, height);
+  fill(240, 0, 0);
 
   for (let i = 0; i < spectrum.length; i++) {
-      const x = map(i, 0, spectrum.length, 0, width)
-      const h = -height + map(spectrum[i], 0, 255, height, 0)
-      rect(x, height, width / spectrum.length, h)
+      const x = map(i, 0, spectrum.length, 0, width);
+      const h = -height + map(spectrum[i], 0, 255, height, 0);
+      rect(x, height, width / spectrum.length, h);
   }
 
-  pop()
+  pop();
 }
 
 // Display the spectrum of the original sound and the processed sound
