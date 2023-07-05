@@ -12,7 +12,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(1240, 1500);
   background(255);
 
   features = [];
@@ -58,18 +58,31 @@ function draw() {
     analyzer.stop();
   }
 
-  const results = {};
-  featuresToAnalyze.map(name => {
-    results[name] = math.std(normalize(features.map(f => f[name])))
-  });
-
   background(255);
   fill(0);
 
   text('File: ' + fileName, 10, 20);
 
-  Object.keys(results).forEach(function(name, i) {
-    const y = i * 20 + 50;
-    text(name + ' normalized std: ' + results[name], 10, y);
+  featuresToAnalyze.forEach(function(name, i) {
+    const frames = normalize(features.map(f => f[name]));
+
+    const y = i * 120 + 50;
+    text(name + ' normalized std: ' + math.std(frames), 10, y);
+
+    push();
+    translate(10, y+10);
+    scale(1, 0.05);
+    noStroke();
+    fill(100);
+    rect(0, 0, width, height);
+    fill(240, 0, 0);
+
+    for (let i = 0; i < frames.length; i++) {
+      const x = map(i, 0, frames.length, 0, width);
+      const h = map(frames[i], 0, 1, 0, height);
+      rect(x, height, width / frames.length, -h);
+    }
+
+    pop();
   });
 }
