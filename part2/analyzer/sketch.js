@@ -1,3 +1,6 @@
+// Part 2 — analyzer: Analyze a sound file and display its features
+// This is my own code
+
 var sound;
 var startAnalysisButton;
 var features;

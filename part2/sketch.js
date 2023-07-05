@@ -1,3 +1,5 @@
+// Part 2 — Visualizer
+
 var sound;
 
 // Settings
@@ -19,7 +21,7 @@ function setup() {
     audioContext: getAudioContext(),
     source: sound,
     bufferSize: bufferSize, // 44100/512 = 86Hz resolution
-    featureExtractors: ["amplitudeSpectrum", "energy", "spectralCentroid", "loudness", "spectralSpread", "spectralKurtosis"],
+    featureExtractors: ["amplitudeSpectrum", "energy", "spectralCentroid", "loudness", "spectralSpread"],
     callback:  processAudioFeatures
   });
 
@@ -81,10 +83,8 @@ function drawVisualisation() {
     fill(map(level, 0, 2, 0, 255));
     stroke(0);
 
-    // console.log(features.spectralKurtosis);
-
     if (centroidRect === index) {
-      const weight = map(features.spectralKurtosis, -50, 200, 1, 30);
+      const weight = map(features.spectralSpread, 0, bufferSize/2, 10, 1);
       strokeWeight(weight);
     }
 
