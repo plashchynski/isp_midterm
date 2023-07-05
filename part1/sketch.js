@@ -1,3 +1,6 @@
+// Part 1
+// This is my own code based on the provided template from the course
+
 // the lower and upper limit of the frequency range for filters
 // defined by the p5.js API: https://p5js.org/reference/#/p5.Filter/set
 const minHz = 10;
