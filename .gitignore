@@ -137,3 +137,5 @@ dist
 
 # zip files are extracted to this folder
 *.zip
+
+tmp/*
