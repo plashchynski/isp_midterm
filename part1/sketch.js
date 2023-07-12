@@ -25,6 +25,7 @@ var waveshaperDistortion;
 var dynamicCompressor;
 var reverbFilter;
 var masterVolumeFilter;
+var delayFilter;
 
 // ffts
 var fftIn;
@@ -87,6 +88,15 @@ var wd_oversampleSlider;
 var wd_dryWetSlider;
 var wd_outputSlider;
 
+// delay
+var dl_time;
+var dl_feedback;
+var dl_type;
+var dl_frequency;
+var dl_dryWetSlider;
+var dl_outputSlider;
+
+
 // This function is called before setup() and is used to load external files
 function preload() {
   // p5.js Sound library reference:
@@ -125,9 +135,13 @@ function setup() {
   waveshaperDistortion.disconnect();
   waveshaperDistortion.process(passFilter);
 
+  delayFilter = new p5.Delay();
+  delayFilter.disconnect();
+  delayFilter.process(waveshaperDistortion);
+
   dynamicCompressor = new p5.Compressor();
   dynamicCompressor.disconnect();
-  dynamicCompressor.process(waveshaperDistortion);
+  dynamicCompressor.process(delayFilter);
 
   reverbFilter = new p5.Reverb();
   reverbFilter.disconnect();
@@ -185,6 +199,14 @@ function updateFiltersSettings() {
   reverbFilter.set(duration, decay, reverbReverse);
   reverbFilter.drywet(rv_dryWetSlider.value());
   reverbFilter.amp(rv_outputSlider.value());
+
+  // configure delay filter
+  delayFilter.delayTime(dl_time.value());
+  delayFilter.feedback(dl_feedback.value());
+  delayFilter.setType(dl_type.value());
+  delayFilter.filter(dl_frequency.value());
+  delayFilter.drywet(dl_dryWetSlider.value());
+  delayFilter.amp(dl_outputSlider.value());
 
   // configure master volume
   masterVolumeFilter.amp(mv_volumeSlider.value());
@@ -415,6 +437,7 @@ function gui_configuration() {
 
   wd_amountSlider = createSlider(0, 1, 0.5, 0.01);
   wd_amountSlider.position(210, 335);
+  wd_amountSlider.changed(updateFiltersSettings);
   text('distortion amount', 210, 330);
 
   // oversample can be 'none', '2x' or '4x'
@@ -427,19 +450,71 @@ function gui_configuration() {
   wd_oversampleRadio.option('4x');
   wd_oversampleRadio.selected('none');
   wd_oversampleRadio.style('width', '200px');
+  
   pop();
 
-  wd_oversampleRadio.position(210,380);
+  wd_oversampleRadio.position(210, 380);
+  wd_oversampleRadio.changed(updateFiltersSettings);
   text('oversample', 210,375);
 
   wd_dryWetSlider = createSlider(0, 1, 0, 0.01);
   wd_dryWetSlider.position(210, 425);
+  wd_dryWetSlider.changed(updateFiltersSettings);
   text('dry/wet', 210, 420);
 
   wd_outputSlider = createSlider(0, 1, 1, 0.01);
   wd_outputSlider.position(210, 470);
+  wd_outputSlider.changed(updateFiltersSettings);
   text('output level', 210, 465);
   
+  // Delay
+  textSize(14);
+  text('delay', 360, 305);
+  textSize(10);
+
+  // Delay Time (in seconds) of the echoed signal
+  // Min: 0, Max: 1. Defaults to 0.5
+  dl_time = createSlider(0, 1, 0.5, 0.01);
+  dl_time.position(360, 335);
+  dl_time.changed(updateFiltersSettings);
+  text('time', 360, 330);
+
+  // feedback is the amount of the output signal that is fed back into the delay line.
+  // Min: 0, Max: 1. Defaults to 0.5
+  dl_feedback = createSlider(0, 1, 0.5, 0.01);
+  dl_feedback.position(360, 380);
+  dl_feedback.changed(updateFiltersSettings);
+  text('feedback', 360, 375);
+
+  // type of delay
+  dl_type = createRadio();
+  dl_type.option('default');
+  dl_type.option('ping pong');
+  dl_type.selected('default');
+  dl_type.style('width', '200px');
+  dl_type.position(360, 425);
+  dl_type.changed(updateFiltersSettings);
+  text('type', 360, 420);
+
+  // frequency
+  dl_frequency = createSlider(minHz, maxHz, maxHz/2, 10);
+  dl_frequency.position(360, 470);
+  dl_frequency.changed(updateFiltersSettings);
+  text('frequency', 360, 465);
+
+  // dry/wet
+  dl_dryWetSlider = createSlider(0, 1, 0, 0.01);
+  dl_dryWetSlider.position(360, 515);
+  dl_dryWetSlider.changed(updateFiltersSettings);
+  text('dry/wet', 360, 510);
+
+  // output level
+  dl_outputSlider = createSlider(0, 1, 1, 0.01);
+  dl_outputSlider.position(360, 560);
+  dl_outputSlider.changed(updateFiltersSettings);
+  text('output level', 360, 555);
+
+
   // spectrums
   textSize(14);
   text('spectrum in', 560,200);
