@@ -1,5 +1,6 @@
 // Part 1
-// This is my own code based on the provided template from the course
+// BEGIN: I wrote this code personally without assistance. Any fragments taken from external source will be explicitly marked.
+// The code based on the provided template from the course
 
 // the lower and upper limit of the frequency range for filters
 // defined by the p5.js API: https://p5js.org/reference/#/p5.Filter/set
@@ -398,6 +399,7 @@ function gui_configuration() {
 function displaySpectrum(spectrum, x, y) {
   push();
 
+  // draw a background rectangle to clear the background
   translate(x, y);
   scale(0.25, 0.2);
   noStroke();
@@ -405,11 +407,14 @@ function displaySpectrum(spectrum, x, y) {
   rect(0, 0, width, height);
   fill(240, 0, 0);
 
-  for (let i = 0; i < spectrum.length; i++) {
-      const x = map(i, 0, spectrum.length, 0, width);
-      const h = -height + map(spectrum[i], 0, 255, height, 0);
-      rect(x, height, width / spectrum.length, h);
-  }
+  // draw the spectrum
+  spectrum.forEach((value, i) => {
+    const x = map(i, 0, spectrum.length, 0, width);
+    const h = map(value, 0, 255, 0, height);
+
+    // draw a rectangle for each frequency bin
+    rect(x, height, width / spectrum.length, -h);
+  });  
 
   pop();
 }
@@ -430,3 +435,5 @@ function draw() {
   // display the spectrograms
   updateSpectrograms();
 }
+
+// END of my code
