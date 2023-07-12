@@ -1,5 +1,7 @@
-// Part 2 — analyzer: Analyze a sound file and display its features
-// This is my own code
+// Part 2 — Analyzer: Analyze a sound file and display its features
+// BEGIN: I wrote this code personally without assistance. Any fragments taken from external source will be explicitly marked.
+// The code based on the provided template from the course
+
 
 var sound;
 var startAnalysisButton;
@@ -89,3 +91,5 @@ function draw() {
     pop();
   });
 }
+
+// END of my code

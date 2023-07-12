@@ -118,7 +118,7 @@ function setup() {
 
   // microphone input
   mic = new p5.AudioIn();
-  
+
   gui_configuration();
 
   player.disconnect();
@@ -286,9 +286,9 @@ function gui_configuration() {
       micEnabled = true;
     }
   });
-  
+
   // Important: you may have to change the slider parameters (min, max, value and step)
-  
+
   // pass filter controls
   textSize(14);
   const filterSelect = createSelect();
@@ -332,7 +332,7 @@ function gui_configuration() {
   p_outputSlider.position(10,245);
   p_outputSlider.changed(updateFiltersSettings);
   text('output level', 10,240);
-  
+
   // dynamic compressor
   textSize(14);
   text('dynamic compressor', 210,80);
@@ -383,7 +383,7 @@ function gui_configuration() {
   dc_outputSlider.position(360, 200);
   dc_outputSlider.changed(updateFiltersSettings);
   text('output level', 360, 195);
-  
+
   // master volume
   textSize(14);
   text('master volume', 560,80);
@@ -429,7 +429,7 @@ function gui_configuration() {
     updateFiltersSettings();
   });
 
-  
+
   // waveshaper distortion
   textSize(14);
   text('waveshaper distortion', 210,305);
@@ -450,7 +450,7 @@ function gui_configuration() {
   wd_oversampleRadio.option('4x');
   wd_oversampleRadio.selected('none');
   wd_oversampleRadio.style('width', '200px');
-  
+
   pop();
 
   wd_oversampleRadio.position(210, 380);
@@ -466,7 +466,7 @@ function gui_configuration() {
   wd_outputSlider.position(210, 470);
   wd_outputSlider.changed(updateFiltersSettings);
   text('output level', 210, 465);
-  
+
   // Delay
   textSize(14);
   text('delay', 360, 305);
@@ -540,7 +540,7 @@ function displaySpectrum(spectrum, x, y) {
 
     // draw a rectangle for each frequency bin
     rect(x, height, width / spectrum.length, -h);
-  });  
+  });
 
   pop();
 }

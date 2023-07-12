@@ -1,4 +1,6 @@
 // Part 2 — Visualizer
+// BEGIN: I wrote this code personally without assistance. Any fragments taken from external source will be explicitly marked.
+// The code based on the provided template from the course
 
 var sound;
 
@@ -9,13 +11,22 @@ var maxAmplitude = 256; // 256 = 0dB
 // Reported features
 var features;
 
+// p5.SpeechRec object
+var speachRec;
+
+// Background color controled by speach
+var backgroundColor;
+
 function preload() {
   sound = loadSound("assets/Kalte_Ohren_(_Remix_).mp3");
 }
 
 function setup() {
   createCanvas(1000, 600);
-  background(255);
+  backgroundColor = color(255);
+  background(backgroundColor);
+
+  setupSpeachControl();
 
   analyzer = Meyda.createMeydaAnalyzer({
     audioContext: getAudioContext(),
@@ -28,6 +39,53 @@ function setup() {
   playStopButton = createButton('play');
   playStopButton.position(10, 10);
   playStopButton.mousePressed(playStop);
+}
+
+function setupSpeachControl()
+{
+  // speech recognition object (will prompt for mic access)
+  speachRec = new p5.SpeechRec();
+
+  // bind callback function to trigger when speech is recognized
+  speachRec.onResult = speachCallback;
+
+  // do continuous recognition
+  speachRec.continuous = true;
+
+  // start listening
+  speachRec.start();
+}
+
+function speachCallback()
+{
+  // log the result
+  console.log("speachCallback: ", speachRec.resultString);
+
+  const resultString = speachRec.resultString.toLowerCase();
+
+  if (resultString.includes("black")) {
+    backgroundColor = color(0);
+  }
+
+  if (resultString.includes("white")) {
+    backgroundColor = color(255);
+  }
+
+  if (resultString.includes("red")) {
+    backgroundColor = color(255, 0, 0);
+  }
+
+  if (resultString.includes("green")) {
+    backgroundColor = color(0, 255, 0);
+  }
+
+  if (resultString.includes("blue")) {
+    backgroundColor = color(0, 0, 255);
+  }
+
+
+
+
 }
 
 function playStop() {
@@ -48,7 +106,7 @@ function draw() {
     analyzer.stop();
   }
 
-  background(255);
+  background(backgroundColor);
 
   drawVisualisation();
 }
@@ -94,3 +152,5 @@ function drawVisualisation() {
     pop();
   });
 }
+
+// END of my code
