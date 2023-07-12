@@ -139,3 +139,6 @@ dist
 *.zip
 
 tmp/*
+
+# Code 
+code.pdf
