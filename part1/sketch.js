@@ -15,8 +15,12 @@ const maxResonance = 1000;
 // p5.SoundFile instance to control the playback
 var player;
 
+// microphone input
+var mic;
+var micEnabled = false;
+
 // filters
-var lowpassFilter;
+var passFilter;
 var waveshaperDistortion;
 var dynamicCompressor;
 var reverbFilter;
@@ -49,12 +53,14 @@ var skipStartButton;
 var skipEndButton;
 var loopButton;
 var recordButton;
+var microphoneButton;
 
-// low-pass filter
-var lp_cutOffSlider;
-var lp_resonanceSlider;
-var lp_dryWetSlider;
-var lp_outputSlider;
+// pass filter
+var p_cutOffSlider;
+var p_resonanceSlider;
+var p_dryWetSlider;
+var p_outputSlider;
+var p_resonanceText;
 
 // dynamic compressor
 var dc_attackSlider;
@@ -99,6 +105,9 @@ function preload() {
 function setup() {
   createCanvas(800, 600);
   background(180);
+
+  // microphone input
+  mic = new p5.AudioIn();
   
   gui_configuration();
 
@@ -108,13 +117,13 @@ function setup() {
   fftIn = new p5.FFT();
   fftIn.setInput(player);
 
-  lowpassFilter = new p5.LowPass();
-  lowpassFilter.disconnect();
-  lowpassFilter.process(player);
+  passFilter = new p5.LowPass();
+  passFilter.disconnect();
+  passFilter.process(player);
 
   waveshaperDistortion = new p5.Distortion();
   waveshaperDistortion.disconnect();
-  waveshaperDistortion.process(lowpassFilter);
+  waveshaperDistortion.process(passFilter);
 
   dynamicCompressor = new p5.Compressor();
   dynamicCompressor.disconnect();
@@ -149,9 +158,9 @@ function setup() {
 function updateFiltersSettings() {
   console.log("update filters settings")
   // configure low-pass filter
-  lowpassFilter.set(lp_cutOffSlider.value(), lp_resonanceSlider.value());
-  lowpassFilter.drywet(lp_dryWetSlider.value());
-  lowpassFilter.amp(lp_outputSlider.value());
+  passFilter.set(p_cutOffSlider.value(), p_resonanceSlider.value());
+  passFilter.drywet(p_dryWetSlider.value());
+  passFilter.amp(p_outputSlider.value());
 
   // configure waveshaper distortion
   waveshaperDistortion.set(wd_amountSlider.value(), wd_oversampleRadio.value());
@@ -217,7 +226,8 @@ function gui_configuration() {
       getAudioContext().resume();
     }
 
-    if (!player.isPlaying())
+    // one source must be connected to the recorder
+    if (!player.isPlaying() && !micEnabled)
       return;
 
     recording = !recording;
@@ -229,35 +239,76 @@ function gui_configuration() {
       recorder.stop();
     }
   });
+
+  microphoneButton = createButton('microphone');
+  microphoneButton.position(465, 20);
+  microphoneButton.mousePressed(() => {
+    if (getAudioContext().state !== 'running') {
+      getAudioContext().resume();
+    }
+
+    if (micEnabled) {
+      mic.stop();
+      mic.disconnect();
+
+      passFilter.process(player);
+      fftIn.setInput(player);
+
+      micEnabled = false;
+    } else {
+      mic.start();
+
+      passFilter.process(mic);
+      fftIn.setInput(mic);
+
+      micEnabled = true;
+    }
+  });
   
   // Important: you may have to change the slider parameters (min, max, value and step)
   
-  // low-pass filter
+  // pass filter controls
   textSize(14);
-  text('low-pass filter', 10,80);
+  const filterSelect = createSelect();
+  filterSelect.position(10, 65);
+  filterSelect.option('Low-pass filter');
+  filterSelect.option('High-pass filter');
+  filterSelect.option('Band-pass filter');
+  filterSelect.changed(() => {
+    const filterType = filterSelect.value();
+    if (filterType === 'Low-pass filter') {
+      passFilter.setType('lowpass');
+    } else if (filterType === 'High-pass filter') {
+      passFilter.setType('highpass');
+    } else if (filterType === 'Band-pass filter') {
+      passFilter.setType('bandpass');
+      p_resonanceText.html('bandwidth');
+    }
+  });
+
   textSize(10);
 
-  lp_cutOffSlider = createSlider(minHz, maxHz, maxHz/2, 10);
-  lp_cutOffSlider.position(10,110);
-  lp_cutOffSlider.changed(updateFiltersSettings);
+  p_cutOffSlider = createSlider(minHz, maxHz, maxHz/2, 10);
+  p_cutOffSlider.position(10,110);
+  p_cutOffSlider.changed(updateFiltersSettings);
   text('cutoff frequency', 10,105);
 
-  lp_resonanceSlider = createSlider(minResonance, maxResonance, 0, 10);
-  lp_resonanceSlider.position(10,155);
-  lp_resonanceSlider.changed(updateFiltersSettings);
-  text('resonance', 10,150);
+  p_resonanceSlider = createSlider(minResonance, maxResonance, 0, 10);
+  p_resonanceSlider.position(10,155);
+  p_resonanceSlider.changed(updateFiltersSettings);
+  p_resonanceText = text('resonance', 10,150);
 
   // dry/wet and output level from 0 to 1.0
   // 1.0 means 100% wet
-  lp_dryWetSlider = createSlider(0, 1.0, 1.0, 0.01);
-  lp_dryWetSlider.position(10,200);
-  lp_dryWetSlider.changed(updateFiltersSettings);
+  p_dryWetSlider = createSlider(0, 1.0, 1.0, 0.01);
+  p_dryWetSlider.position(10,200);
+  p_dryWetSlider.changed(updateFiltersSettings);
   text('dry/wet', 10,195);
 
   // output level from 0 to 1.0, 1.0 means 100% volume
-  lp_outputSlider = createSlider(0, 1.0, 1.0, 0.01);
-  lp_outputSlider.position(10,245);
-  lp_outputSlider.changed(updateFiltersSettings);
+  p_outputSlider = createSlider(0, 1.0, 1.0, 0.01);
+  p_outputSlider.position(10,245);
+  p_outputSlider.changed(updateFiltersSettings);
   text('output level', 10,240);
   
   // dynamic compressor
@@ -431,6 +482,7 @@ function draw() {
   loopButton.style('background-color', playerLooping ? 'green' : '');
   rv_reverseButton.style('background-color', reverbReverse ? 'green' : '');
   recordButton.style('background-color', recording ? 'green' : '');
+  microphoneButton.style('background-color', micEnabled ? 'green' : '');
 
   // display the spectrograms
   updateSpectrograms();
