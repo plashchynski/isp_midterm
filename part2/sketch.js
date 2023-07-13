@@ -1,5 +1,5 @@
 // Part 2 — Visualizer
-// BEGIN: I wrote this code personally without assistance. Any fragments taken from external source will be explicitly marked.
+// BEGIN: I wrote this code personally without assistance. Any fragments taken from external sources will be explicitly marked.
 // The code based on the provided template from the course
 
 var sound;
