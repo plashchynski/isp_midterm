@@ -247,19 +247,20 @@ function gui_configuration() {
     if (getAudioContext().state !== 'running') {
       getAudioContext().resume();
     }
-
-    // one source must be connected to the recorder
-    if (!player.isPlaying() && !micEnabled)
-      return;
-
-    recording = !recording;
+    
     if (recording) {
+      recorder.stop();
+    } else {
+      // one source must be connected to the recorder
+      if (!player.isPlaying() && !micEnabled)
+        return;
+
       recorder.record(outFile, 0, () => {
         save(outFile, 'processed.wav');
-      });
-    } else {
-      recorder.stop();
+      });      
     }
+
+    recording = !recording;
   });
 
   microphoneButton = createButton('microphone');
